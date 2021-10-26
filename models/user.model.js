@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
             type : String,
             default : "/uploads/profil/random-user.png"
         },
-        likes: {
+        favorites: {
             type: [String]
         }
 
