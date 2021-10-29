@@ -17,6 +17,9 @@ const userSchema = new mongoose.Schema(
             maxlength: 55,
             trim: true
         },
+        profil: {
+            type: String
+        },
         nationality: {
             type: String,
             max: 1024,
