@@ -1,16 +1,30 @@
 const SessionModel = require('../models/session.model');
-const UserModel = require('../models/session.model');
+const UserModel = require('../models/user.model');
 const ObjectId = require('mongoose').Types.ObjectId;
 const fs = require('fs');
 const { promisify } = require('util');
 const { uploadErrors } = require('../utils/error.utils');
 const pipeline = promisify(require('stream').pipeline);
 
-module.exports.readSession = (req, res) => {
+module.exports.allSessions = (req, res) => {
     SessionModel.find((err, docs) => {
         if (!err) res.send(docs);
         else console.log("cannot get data", err);
     }).sort({ createdAt: 1 })
+}
+
+module.exports.sessionInfo = async (req, res) => {
+    console.log(req.params);
+    if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).send('ID unknown :' + req.params.id)
+    }
+    SessionModel.findById(req.params.id, (err, docs) => {
+        if (!err) {
+            res.send(docs)
+        } else {
+            console.log('ID unknown :' + err);
+        }
+    });
 }
 
 module.exports.createSession = async (req, res) => {
@@ -114,23 +128,224 @@ module.exports.deleteSession = (req, res) => {
 };
 
 module.exports.likeSession = (req, res) => {
+    if (!ObjectId.isValid(req.params.id) || !ObjectId.isValid(req.body.id) ) 
+        return res.status(400).send('ID unknown');
+
+
+    try {
+        SessionModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $addToSet: {likers: req.body.id}
+            },
+            { new: true},
+            (err, docs) => {
+                if (err) return res.status(400).send(err);
+            }
+        );
+        UserModel.findByIdAndUpdate(
+            req.body.id,
+            { 
+                $addToSet: {favorites : req.params.id}
+            },
+            { new: true},
+            (err, docs) => {
+                console.log(req.params.id);
+                if (!err) res.send(docs);
+                else return res.status(400).send(err);
+            }
+        )
+    } catch (err) {
+        return res.status(400).send(err);
+    }
 
 }
 
 module.exports.unlikeSession = (req, res) => {
+    if (!ObjectId.isValid(req.params.id) || !ObjectId.isValid(req.body.id) ) 
+        return res.status(400).send('ID unknown');
+
+    try {
+        SessionModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $pull: {likers: req.body.id}
+            },
+            { new: true},
+            (err, docs) => {
+                if (err) return res.status(400).send(err);
+            }
+        );
+        UserModel.findByIdAndUpdate(
+            req.body.id,
+            { 
+                $pull: {favorites : req.params.id}
+            },
+            { new: true},
+            (err, docs) => {
+                console.log(req.params.id);
+                if (!err) res.send(docs);
+                else return res.status(400).send(err);
+            }
+        )
+    } catch (err) {
+        return res.status(400).send(err);
+    }
+}
+
+module.exports.addSpeakerSession = async (req, res) => {
+    if (!ObjectId.isValid(req.params.id))
+        return res.status(400).send('ID unknown' + req.params.id);
+
+    let fileName;
+
+    if (req.file !== null) {
+        try {
+            if (
+                req.file.detectedMimeType !== "image/jpg" &&
+                req.file.detectedMimeType !== "image/png" &&
+                req.file.detectedMimeType !== "image/jpeg"
+            )
+                throw Error("invalid file");
+
+            if (req.file.size > 500000)
+                throw Error("max size");
+
+        } catch (err) {
+            const errors = uploadErrors(err)
+            return res.status(400).json({ errors });
+        }
+
+        fileName = req.body.firstname + Date.now() + '.jpg';
+
+        await pipeline(
+            req.file.stream,
+            fs.createWriteStream(
+                `${__dirname}/../client/public/uploads/speakers/${fileName}`
+            )
+        );
+    }
+
+    try {
+        SessionModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $push: {
+                    speakers: {
+                        firstname: req.body.firstname,
+                        lastname: req.body.lastname,
+                        email: req.body.email,
+                        fonction: req.body.fonction,
+                        linkedIn: req.body.linkedIn,
+                        instagram: req.body.instagram,
+                        twitter: req.body.twitter,
+                        web: req.body.web,
+                        image: req.file !== null ? "/uploads/speakers/" + fileName : "",
+                        timestamp: new Date().toISOString()
+                    }
+                }
+            },
+            { new: true},
+            (err, docs) => {
+                if (!err) return res.send(docs);
+                else return res.status(400).send(err);
+            }
+        );
+    } catch (err) {
+        return res.status(400).send(err);
+    }
 
 }
 
-module.exports.addSpeakerSession = (req, res) => {
+module.exports.editSpeakerSession = async (req, res) => {
+    if (!ObjectId.isValid(req.params.id))
+        return res.status(400).send('ID unknown', req.params.id);
+        
+    if (req.file !== null) {
+        try {
+            if (
+                req.file.detectedMimeType !== "image/jpg" &&
+                req.file.detectedMimeType !== "image/png" &&
+                req.file.detectedMimeType !== "image/jpeg"
+            )
+                throw Error("invalid file");
 
-}
+            if (req.file.size > 500000)
+                throw Error("max size");
 
-module.exports.editSpeakerSession = (req, res) => {
+        } catch (err) {
+            const errors = uploadErrors(err)
+            return res.status(400).json({ errors });
+        }
 
+        fileName = req.body.speakerId + Date.now() + '.jpg';
+
+        await pipeline(
+            req.file.stream,
+            fs.createWriteStream(
+                `${__dirname}/../client/public/uploads/speakers/${fileName}`
+            )
+        );
+    }
+
+    try {
+        SessionModel.findById(
+            req.params.id,
+            (err, docs) => {
+                const theSpeaker = docs.speakers.find((session) => 
+                    session._id.equals(req.body.speakerId)
+                );
+
+                if (!theSpeaker) {
+                    return res.status(404).send("speaker not found");
+                }
+                theSpeaker.firstname = req.body.firstname,
+                theSpeaker.lastname = req.body.lastname,
+                theSpeaker.email = req.body.email,
+                theSpeaker.fonction = req.body.fonction,
+                theSpeaker.linkedIn = req.body.linkedIn,
+                theSpeaker.instagram = req.body.instagram,
+                theSpeaker.twitter = req.body.twitter,
+                theSpeaker.image = req.file !== null ? "/uploads/speakers/" + fileName : "",
+                theSpeaker.web = req.body.web
+
+                return docs.save((err) => {
+                    if (!err) {
+                        return res.status(200).send(docs);
+                    } else {
+                        return res.status(500).send(err);
+                    }
+                })
+            }
+        );
+    } catch (err) {
+        return res.status(400).send(err);
+    }
 }
 
 module.exports.deleteSpeakerSession = (req, res) => {
+    if (!ObjectId.isValid(req.params.id))
+        return res.status(400).send('ID unknown', req.params.id);
 
+    try {
+        return SessionModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $pull: {
+                    speakers: {
+                        _id: req.body.speakerId,
+                    },
+                },
+            },
+            { new: true },
+            (err, docs) => {
+                if (!err) return res.send(docs);
+                else return res.status(400).send(err);
+            }
+        );
+    } catch (err) {
+        return res.status(400).send(err);
+    }
 }
 
 
