@@ -13,7 +13,7 @@ module.exports.readSession = (req, res) => {
     }).sort({ createdAt: 1 })
 }
 
-module.exports.createSession = (req, res) => {
+module.exports.createSession = async (req, res) => {
 
     let fileName;
 
@@ -39,7 +39,7 @@ module.exports.createSession = (req, res) => {
         await pipeline(
             req.file.stream,
             fs.createWriteStream(
-                `${__dirname}/../client/public/uploads/posts/${fileName}`
+                `${__dirname}/../client/public/uploads/sessions/${fileName}`
             )
         );
     }
