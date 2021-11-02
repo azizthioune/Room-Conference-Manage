@@ -9,6 +9,7 @@ const { checkUser, requireAuth } = require('./middleware/auth.middleware');
 const cors = require('cors');
 const app = express();
 
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
