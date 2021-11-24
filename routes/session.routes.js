@@ -18,6 +18,7 @@ router.patch('/delete-speaker-session/:id', sessionController.deleteSpeakerSessi
 
 //pdf docs
 router.patch('/add-pdf/:id', upload.single('file'), sessionController.addFileSession);
+router.patch('/delete-pdf/:id', upload.single('file'), sessionController.deleteFileSession);
 
 
 module.exports = router;

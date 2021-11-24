@@ -69,6 +69,8 @@ module.exports.createSession = async (req, res) => {
         address: req.body.address,
         description: req.body.description,
         mapAddress: req.body.mapAddress,
+        mapLatitude: req.body.latitude,
+        mapLongitude: req.body.longitude,
         image: req.file !== null ? "./uploads/sessions/" + fileName : "",
         likers: [],
         speakers: [],
@@ -99,12 +101,14 @@ module.exports.updateSession = (req, res) => {
         address: req.body.address,
         description: req.body.description,
         mapAddress: req.body.mapAddress,
+        mapLatitude: req.body.latitude,
+        mapLongitude: req.body.longitude,
     }
 
     SessionModel.findByIdAndUpdate(
         req.params.id,
         { $set: updatedRecord },
-        { new: true },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
         (err, docs) => {
             if (!err) res.send(docs);
             else console.log("update error:", err);
@@ -403,5 +407,30 @@ module.exports.addFileSession = async (req, res) => {
         return res.status(400).send(err);
     }
 
+}
+
+module.exports.deleteFileSession = (req, res) => {
+    if (!ObjectId.isValid(req.params.id))
+        return res.status(400).send('ID unknown', req.params.id);
+
+    try {
+        return SessionModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $pull: {
+                    files: {
+                        _id: req.body.fileId,
+                    },
+                },
+            },
+            { new: true },
+            (err, docs) => {
+                if (!err) return res.send(docs);
+                else return res.status(400).send(err);
+            }
+        );
+    } catch (err) {
+        return res.status(400).send(err);
+    }
 }
 
