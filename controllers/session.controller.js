@@ -348,4 +348,60 @@ module.exports.deleteSpeakerSession = (req, res) => {
     }
 }
 
+module.exports.addFileSession = async (req, res) => {
+
+    if (!ObjectId.isValid(req.params.id))
+        return res.status(400).send('ID unknown' + req.params.id);
+
+    let fileName;
+
+    if (req.file !== null) {
+        try {
+            //console.log("request", req);
+            if (
+                req.file.detectedMimeType !== "application/pdf"
+            )
+                throw Error("invalid file");
+
+            if (req.file.size > 500000)
+                throw Error("max size");
+
+        } catch (err) {
+            const errors = uploadErrors(err)
+            return res.status(400).json({ errors });
+        }
+
+        fileName = req.file.originalName;
+
+        await pipeline(
+            req.file.stream,
+            fs.createWriteStream(
+                `${__dirname}/../client/public/uploads/sessions/docs/${fileName}`
+            )
+        );
+    }
+
+    try {
+        SessionModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $push: {
+                    files: {
+                        fileName: fileName,
+                        fileLink: req.file !== null ? "/uploads/sessions/docs/" + fileName : "",
+                        timestamp: new Date().toISOString()
+                    }
+                }
+            },
+            { new: true},
+            (err, docs) => {
+                if (!err) return res.send(docs);
+                else return res.status(400).send(err);
+            }
+        );
+    } catch (err) {
+        return res.status(400).send(err);
+    }
+
+}
 
