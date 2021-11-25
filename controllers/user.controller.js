@@ -32,7 +32,9 @@ module.exports.updateUser = (req, res) => {
             {
                 $set: {
                     firstname: req.body.firstname,
-                    lastname: req.body.lastname
+                    lastname: req.body.lastname,
+                    phoneNumber: req.body.phoneNumber,
+                    profession: req.body.profession
                 }
             },
             { new: true, upsert: true, setDefaultsOnInsert: true },

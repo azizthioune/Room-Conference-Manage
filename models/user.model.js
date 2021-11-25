@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema(
         profil: {
             type: String
         },
+        profession: {
+            type: String
+        },
+        phoneNumber: {
+            type: String
+        },
         nationality: {
             type: String,
             max: 1024,
