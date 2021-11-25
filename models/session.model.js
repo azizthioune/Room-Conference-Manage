@@ -46,6 +46,14 @@ const sessionSchema = new mongoose.Schema(
         mapAddress: {
             type: String
         },
+        mapLatitude: {
+            type: String,
+            required: true
+        },
+        mapLongitude: {
+            type: String,
+            required: true
+        },
         image: {
             type: String
         },
