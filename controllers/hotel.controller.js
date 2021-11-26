@@ -48,7 +48,7 @@ module.exports.createHotel = async (req, res) => {
             return res.status(400).json({ errors });
         }
 
-        fileName = req.body.posterId + Date.now() + '.jpg';
+        fileName = req.body.name + Date.now() + '.jpg';
 
         await pipeline(
             req.file.stream,
