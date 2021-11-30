@@ -34,7 +34,8 @@ module.exports.updateUser = (req, res) => {
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,
                     phoneNumber: req.body.phoneNumber,
-                    profession: req.body.profession
+                    profession: req.body.profession,
+                    expoToken: req.body.expoToken
                 }
             },
             { new: true, upsert: true, setDefaultsOnInsert: true },

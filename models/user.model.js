@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema(
         phoneNumber: {
             type: String
         },
+        expoToken: {
+            type: String
+        },
         nationality: {
             type: String,
             max: 1024,
