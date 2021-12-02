@@ -20,5 +20,9 @@ router.patch('/delete-speaker-session/:id', sessionController.deleteSpeakerSessi
 router.patch('/add-pdf/:id', upload.single('file'), sessionController.addFileSession);
 router.patch('/delete-pdf/:id', upload.single('file'), sessionController.deleteFileSession);
 
+//galerie images
+router.patch('/add-image/:id', upload.single('file'), sessionController.addImageSession);
+router.patch('/delete-image/:id', upload.single('file'), sessionController.deleteImageSession);
+
 
 module.exports = router;

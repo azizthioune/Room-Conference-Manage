@@ -96,6 +96,16 @@ const sessionSchema = new mongoose.Schema(
                 }
             ],
             required: true
+        },
+        galerie: {
+            type: [
+                {
+                    imageId: String,
+                    imageName: String, 
+                    imageLink: String
+                }
+            ],
+            required: true
         }
     },
     {
