@@ -4,6 +4,7 @@ const userRoutes = require('./routes/user.routes');
 const sessionRoutes = require('./routes/session.routes')
 const hotelRoutes = require('./routes/hotel.routes')
 const actuRoutes = require('./routes/actu.routes')
+const notifRoutes = require('./routes/notif.routes')
 require('dotenv').config({ path: './config/.env' });
 require('./config/db')
 const { checkUser, requireAuth } = require('./middleware/auth.middleware');
@@ -28,6 +29,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/session', sessionRoutes);
 app.use('/api/hotel', hotelRoutes);
 app.use('/api/actu', actuRoutes);
+app.use('/api/notif', notifRoutes);
 
 // server
 app.listen(process.env.PORT, () => {

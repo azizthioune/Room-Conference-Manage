@@ -1,10 +1,13 @@
 const SessionModel = require('../models/session.model');
 const UserModel = require('../models/user.model');
+const NotifModel = require('../models/notif.model');
 const ObjectId = require('mongoose').Types.ObjectId;
 const fs = require('fs');
 const { promisify } = require('util');
 const { uploadErrors } = require('../utils/error.utils');
 const pipeline = promisify(require('stream').pipeline);
+const { Expo } = require("expo-server-sdk");
+const expo = new Expo();
 
 module.exports.allSessions = (req, res) => {
     SessionModel.find((err, docs) => {
@@ -92,6 +95,50 @@ module.exports.updateSession = (req, res) => {
     if (!ObjectId.isValid(req.params.id))
         return res.status(400).send('ID unknown' + req.params.id);
 
+    const usersExpoToken= []
+    const notifications = [];
+    UserModel.find().then(data => {
+        console.log("all users:")
+        console.log(data);
+        data.forEach((e, index) => {
+            if (e.expoToken != null) {
+                usersExpoToken.push(e.expoToken);
+            }
+            });
+    } )
+    
+    const handlePushTokens = ( body ) => {
+        
+        let savedPushTokens= usersExpoToken
+        for (let pushToken of savedPushTokens) {
+            if (!Expo.isExpoPushToken(pushToken)) {
+            console.error(`Push token ${pushToken} is not a valid Expo push token`);
+            continue;
+            }
+        
+            notifications.push({
+            to: pushToken,
+            sound: "default",
+            title: "Session updated",
+            body: body,
+            // data: { body }
+            });
+        }
+        console.log("notif", notifications[0]);
+        let chunks = expo.chunkPushNotifications(notifications);
+        
+        (async () => {
+            for (let chunk of chunks) {
+            try {
+                let receipts = await expo.sendPushNotificationsAsync(chunk);
+                console.log(receipts);
+            } catch (error) {
+                console.error(error);
+            }
+            }
+        })();
+        };
+
     const updatedRecord = {
         name: req.body.name,
         type: req.body.type,
@@ -105,14 +152,35 @@ module.exports.updateSession = (req, res) => {
         mapLatitude: req.body.latitude,
         mapLongitude: req.body.longitude,
     }
-
+    
     SessionModel.findByIdAndUpdate(
         req.params.id,
         { $set: updatedRecord },
         { new: true, upsert: true, setDefaultsOnInsert: true },
         (err, docs) => {
-            if (!err) res.send(docs);
-            else console.log("update error:", err);
+            if ((!err)) {
+                res.send(docs),
+                handlePushTokens(`Heey the session ${docs.name} has been updated go check it !`)
+
+
+                const newNotif= new NotifModel({
+                    title: notifications[0].title,
+                    body: notifications[0].body,
+                    sessionName: docs.name,
+                    sessionCategory: docs.category
+                });
+            
+                try {
+                    const notif =  newNotif.save();
+                    console.log(notif);
+                } catch (err) {
+                    console.log(err);
+                }
+
+
+            } else {
+                console.log("update error:", err)
+            }
         }
     )
 
