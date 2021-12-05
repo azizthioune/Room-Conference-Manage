@@ -17,7 +17,10 @@ const notifSchema = new mongoose.Schema(
         sessionCategory: {
             type: String,
             required: true
-        }
+        },
+        isOpen: {
+            type: Boolean
+        },
     },
     {
         timestamps: true

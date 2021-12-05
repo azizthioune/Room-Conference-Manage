@@ -167,7 +167,8 @@ module.exports.updateSession = (req, res) => {
                     title: notifications[0].title,
                     body: notifications[0].body,
                     sessionName: docs.name,
-                    sessionCategory: docs.category
+                    sessionCategory: docs.category,
+                    isOpen: false
                 });
             
                 try {
