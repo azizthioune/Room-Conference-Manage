@@ -32,7 +32,7 @@ module.exports.uploadErrors = (err) => {
         errors.format = "Format incompatible";
 
     if (err.message.includes('max size'))
-        errors.maxSize = "Le fichier dépasse 500ko";
+        errors.maxSize = "Le fichier dépasse 2mo";
 
     return errors;
 }

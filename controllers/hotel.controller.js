@@ -40,7 +40,7 @@ module.exports.createHotel = async (req, res) => {
             )
                 throw Error("invalid file");
 
-            if (req.file.size > 500000)
+            if (req.file.size > 2000000)
                 throw Error("max size");
 
         } catch (err) {
