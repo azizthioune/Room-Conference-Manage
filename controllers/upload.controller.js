@@ -21,7 +21,7 @@ module.exports.uploadProfil = async (req, res) => {
         return res.status(400).json({errors});
     }
 
-    const fileName = req.body.name + ".jpg";
+    const fileName = req.body.name.replace(/" "/g, "") + ".jpg";
     
     await pipeline(
         req.file.stream,
@@ -33,7 +33,7 @@ module.exports.uploadProfil = async (req, res) => {
     try {
         UserModel.findByIdAndUpdate(
             req.body.userId,
-            { $set : {picture: "./uploads/profils/" + fileName} }, 
+            { $set : {picture: "/uploads/profils/" + fileName} }, 
             { new: true, upsert: true, setDefaultsOnInsert: true },
             (err, docs) => {
                 if (!err) return res.send(docs);
