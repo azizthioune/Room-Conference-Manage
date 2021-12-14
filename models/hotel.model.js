@@ -24,6 +24,10 @@ const hotelSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        transportation: {
+            type: String,
+            required: true
+        },
         category: {
             type: String,
             minlength: 3,
