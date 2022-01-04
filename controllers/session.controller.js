@@ -118,7 +118,7 @@ module.exports.createSession = async (req, res) => {
         mapAddress: req.body.mapAddress,
         mapLatitude: req.body.latitude,
         mapLongitude: req.body.longitude,
-        image: req.file !== null ? "./uploads/sessions/" + fileName : "",
+        image: req.file !== null ? "./uploads/sessions/" + fileName : "" ,
         likers: [],
         speakers: [],
         moderators: [],
