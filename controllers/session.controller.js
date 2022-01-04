@@ -34,6 +34,50 @@ module.exports.createSession = async (req, res) => {
 
     let fileName;
 
+    const usersExpoToken= []
+    const notifications = [];
+    UserModel.find().then(data => {
+        console.log("all users:")
+        console.log(data);
+        data.forEach((e, index) => {
+            if (e.expoToken != null) {
+                usersExpoToken.push(e.expoToken);
+            }
+            });
+    } )
+    
+    const handlePushTokens = ( body ) => {
+        
+        let savedPushTokens= usersExpoToken
+        for (let pushToken of savedPushTokens) {
+            if (!Expo.isExpoPushToken(pushToken)) {
+            console.error(`Push token ${pushToken} is not a valid Expo push token`);
+            continue;
+            }
+        
+            notifications.push({
+            to: pushToken,
+            sound: "default",
+            title: "Session updated",
+            body: body,
+            // data: { body }
+            });
+        }
+        console.log("notif", notifications[0]);
+        let chunks = expo.chunkPushNotifications(notifications);
+        
+        (async () => {
+            for (let chunk of chunks) {
+            try {
+                let receipts = await expo.sendPushNotificationsAsync(chunk);
+                console.log(receipts);
+            } catch (error) {
+                console.error(error);
+            }
+            }
+        })();
+    };
+
     if (req.file !== null) {
         try {
             if (
@@ -84,6 +128,7 @@ module.exports.createSession = async (req, res) => {
 
     try {
         const session = await newSession.save();
+        handlePushTokens(`Heey a new session has been created go check it !`)
         return res.status(201).json(session);
     } catch (err) {
         return res.status(400).send(err);
@@ -137,7 +182,7 @@ module.exports.updateSession = (req, res) => {
             }
             }
         })();
-        };
+    };
 
     const updatedRecord = {
         name: req.body.name,
@@ -159,13 +204,9 @@ module.exports.updateSession = (req, res) => {
         { new: true, upsert: true, setDefaultsOnInsert: true },
         (err, docs) => {
             if ((!err)) {
-                res.send(docs),
-                handlePushTokens(`Heey the session ${docs.name} has been updated go check it !`)
-
-
                 const newNotif= new NotifModel({
-                    title: notifications[0].title,
-                    body: notifications[0].body,
+                    title: notifications[0]?.title,
+                    body: notifications[0]?.body,
                     sessionName: docs.name,
                     sessionCategory: docs.category,
                     isOpen: false
@@ -177,7 +218,8 @@ module.exports.updateSession = (req, res) => {
                 } catch (err) {
                     console.log(err);
                 }
-
+                res.send(docs),
+                handlePushTokens(`Heey the session ${docs.name} has been updated go check it !`)
 
             } else {
                 console.log("update error:", err)
