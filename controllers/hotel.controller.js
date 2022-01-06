@@ -48,7 +48,7 @@ module.exports.createHotel = async (req, res) => {
             return res.status(400).json({ errors });
         }
 
-        fileName = req.body.name + Date.now() + '.jpg';
+        fileName = req.body.posterId.replace(/" "/g, "") + Date.now() + '.jpg';
 
         await pipeline(
             req.file.stream,
@@ -70,7 +70,7 @@ module.exports.createHotel = async (req, res) => {
         mapAddress: req.body.mapAddress,
         mapLatitude: req.body.latitude,
         mapLongitude: req.body.longitude,
-        image: req.file !== null ? "./uploads/hotels/" + fileName : ""
+        image: req.file !== null ? "/uploads/hotels/" + fileName : ""
     });
 
     try {

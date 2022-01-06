@@ -3,6 +3,7 @@ image: node:latest
 before_script:
   - apt-get update -qy
   - gem install dpl
+  - gem install faraday -v 1.8.0
 
 stages:
   - staging
